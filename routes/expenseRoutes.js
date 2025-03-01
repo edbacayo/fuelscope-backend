@@ -248,8 +248,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ error: 'Expense not found or unauthorized' });
         }
 
-        console.log('expense: ', expense);
-
         // Mark the expense as soft-deleted
         expense.isDeleted = true;
         await expense.save();
@@ -274,20 +272,18 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             }).sort({ date: -1 });
 
             let reminder = vehicle.serviceReminders.find(r => r.type === serviceType);
-
-            console.log('mostRecentService: ', mostRecentService, 'reminder: ', reminder);
             if (reminder) {
                 if (mostRecentService) {
                     // ✅ Update reminder with the latest service record
-                    reminder.lastServiceDate = mostRecentService.date;
+                    reminder.lastServiceDate = new Date(mostRecentService.date);
                     reminder.lastServiceOdometer = mostRecentService.odometer;
                 } else {
-                    // ❌ No previous service record found → Remove or disable reminder
+                    // ❌ No previous service record found → Disable the reminder
                     reminder.isEnabled = false;
                 }
+                await vehicle.save();
+                console.log('Updated service reminders:', vehicle.serviceReminders);
             }
-
-            await vehicle.save();
         }
 
         res.json({ message: 'Expense marked as deleted successfully' });
