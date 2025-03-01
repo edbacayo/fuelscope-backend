@@ -16,25 +16,6 @@ router.delete('/purge', authMiddleware, async (req, res) => {
     }
 });
 
-// Soft-delete an expense entry
-router.delete('/:id', authMiddleware, async (req, res) => {
-    try {
-        const expense = await Expense.findById(req.params.id);
-
-        if (!expense || expense.userId.toString() !== req.user.id) {
-            return res.status(404).json({ error: 'Expense not found or unauthorized' });
-        }
-
-        // Mark the expense as soft-deleted
-        expense.isDeleted = true;
-        await expense.save();
-
-        res.json({ message: 'Expense marked as deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error', details: err.message });
-    }
-});
-
 
 // Add an expense and handle fuel efficiency & service reminders
 router.post('/', authMiddleware, async (req, res) => {
@@ -184,6 +165,8 @@ router.post('/', authMiddleware, async (req, res) => {
                     // ✅ Reset existing reminder
                     reminder.lastServiceDate = new Date(date);
                     reminder.lastServiceOdometer = odometer;
+                    reminder.odometerInterval = reminderToSend.odometerInterval; // added so the existing intervals is also updated
+                    reminder.timeIntervalMonths = reminderToSend.timeIntervalMonths; // added so the existing intervals is also updated
                     reminderExists = true; // Mark that the reminder exists
                 }
             });
@@ -257,26 +240,62 @@ router.get('/:vehicleId', authMiddleware, async (req, res) => {
 });
 
 
-// Delete an expense (Only if it belongs to the logged-in user)
+// Soft-delete an expense entry
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const expense = await Expense.findById(req.params.id);
-
-        if (!expense) {
-            return res.status(404).json({ error: 'Expense not found' });
+        if (!expense || expense.userId.toString() !== req.user.id) {
+            return res.status(404).json({ error: 'Expense not found or unauthorized' });
         }
 
-        // Ensure the logged-in user owns the expense
-        if (expense.userId.toString() !== req.user.id) {
-            return res.status(403).json({ error: 'Unauthorized: You can only delete your own expenses' });
+        console.log('expense: ', expense);
+
+        // Mark the expense as soft-deleted
+        expense.isDeleted = true;
+        await expense.save();
+
+        const vehicle = await Vehicle.findById(expense.vehicleId);
+        if (!vehicle) {
+            return res.status(404).json({ error: 'Vehicle not found' });
+        }
+        console.log('vehicle: ', vehicle);
+
+        // ✅ If the deleted expense was a service, update the related reminder
+        if (expense.type === 'service' && expense.serviceDetails) {
+            const serviceType = expense.serviceDetails.serviceType;
+
+            // Find the most recent service entry (excluding the deleted one)
+            const mostRecentService = await Expense.findOne({
+                vehicleId: expense.vehicleId,
+                type: 'service',
+                'serviceDetails.serviceType': serviceType,
+                isDeleted: false, // Exclude deleted services
+                _id: { $ne: expense._id } // Exclude the current one being deleted
+            }).sort({ date: -1 });
+
+            let reminder = vehicle.serviceReminders.find(r => r.type === serviceType);
+
+            console.log('mostRecentService: ', mostRecentService, 'reminder: ', reminder);
+            if (reminder) {
+                if (mostRecentService) {
+                    // ✅ Update reminder with the latest service record
+                    reminder.lastServiceDate = mostRecentService.date;
+                    reminder.lastServiceOdometer = mostRecentService.odometer;
+                } else {
+                    // ❌ No previous service record found → Remove or disable reminder
+                    reminder.isEnabled = false;
+                }
+            }
+
+            await vehicle.save();
         }
 
-        await Expense.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Expense deleted successfully' });
+        res.json({ message: 'Expense marked as deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
+
 
 // Update an expense (Only if it belongs to the logged-in user)
 router.put('/:id', authMiddleware, async (req, res) => {
