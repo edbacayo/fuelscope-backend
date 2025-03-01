@@ -256,8 +256,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         if (!vehicle) {
             return res.status(404).json({ error: 'Vehicle not found' });
         }
-        console.log('vehicle: ', vehicle);
-
         // ✅ If the deleted expense was a service, update the related reminder
         if (expense.type === 'service' && expense.serviceDetails) {
             const serviceType = expense.serviceDetails.serviceType;
@@ -282,10 +280,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     reminder.isEnabled = false;
                 }
                 await vehicle.save();
-                console.log('Updated service reminders:', vehicle.serviceReminders);
             }
         }
-
         res.json({ message: 'Expense marked as deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });
