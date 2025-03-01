@@ -49,6 +49,47 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized: You can only add expenses to your own vehicles' });
         }
 
+        // ✅ Check for existing duplicate (both soft-deleted & active entries)
+        const duplicateQuery = {
+            vehicleId,
+            type,
+            odometer,
+            totalCost,
+            date,
+            isDeleted: false // Check only active records
+        };
+
+        if (type === 'fuel') {
+            duplicateQuery['fuelDetails.fuelBrand'] = fuelDetails.fuelBrand;
+        } else if (type === 'service') {
+            duplicateQuery['serviceDetails.serviceType'] = serviceDetails.serviceType;
+        }
+
+        const { forceAdd } = req.body;
+        const existingExpense = await Expense.findOne(duplicateQuery);
+
+        if (existingExpense && !forceAdd) {
+            return res.status(409).json({
+                error: 'Duplicate expense detected.',
+                message: 'A similar expense already exists. Do you still want to add this?',
+                duplicate: existingExpense
+            });
+        }
+
+        // ✅ Check for soft-deleted duplicate
+        duplicateQuery.isDeleted = true;
+        const softDeletedExpense = await Expense.findOne(duplicateQuery);
+
+        if (softDeletedExpense) {
+            // Restore the soft-deleted expense
+            softDeletedExpense.isDeleted = false;
+            await softDeletedExpense.save();
+            return res.status(200).json({
+                message: 'Soft-deleted expense restored successfully.',
+                restoredExpense: softDeletedExpense
+            });
+        }
+
         // ✅ Update odometer if needed
         if (odometer > vehicle.odometer) {
             vehicle.odometer = odometer;
@@ -70,10 +111,8 @@ router.post('/', authMiddleware, async (req, res) => {
             };
         }
 
-        if (type === 'service') {
-            if (!serviceDetails || !serviceDetails.serviceType) {
-                return res.status(400).json({ error: 'Service type is required for service entries.' });
-            }
+        if (type === 'service' && (!serviceDetails || !serviceDetails.serviceType)) {
+            return res.status(400).json({ error: 'Service type is required for service entries.' });
         }
 
         // ✅ Create the new expense entry
@@ -153,8 +192,8 @@ router.post('/', authMiddleware, async (req, res) => {
             if (!reminderExists && req.body.reminderToSend && req.body.reminderToSend.isEnabled) {
                 vehicle.serviceReminders.push({
                     type: serviceDetails.serviceType,
-                    odometerInterval: req.body.reminderToSend.odometerInterval,
-                    timeIntervalMonths: req.body.reminderToSend.timeIntervalMonths,
+                    odometerInterval: reminderToSend.odometerInterval,
+                    timeIntervalMonths: reminderToSend.timeIntervalMonths,
                     lastServiceDate: new Date(date),
                     lastServiceOdometer: odometer,
                     isEnabled: true // ✅ Only add if user enabled it
@@ -269,6 +308,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
         res.json({ message: 'Expense updated successfully', expense });
     } catch (err) {
+        console.log('Error: ', err.message);
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
