@@ -146,16 +146,18 @@ router.post('/', authMiddleware, async (req, res) => {
             let reminderExists = false;
 
             vehicle.serviceReminders.forEach((reminder) => {
-                if (
-                    reminder.isEnabled && // ✅ Only update enabled reminders
-                    reminder.type.toLowerCase() === serviceDetails.serviceType.toLowerCase()
-                ) {
-                    // ✅ Reset existing reminder
+                if (reminder.type.toLowerCase() === serviceDetails.serviceType.toLowerCase()) {
+                    // ✅ If the reminder is disabled but the user enabled it, activate it
+                    if (!reminder.isEnabled && req.body.reminderToSend?.isEnabled) {
+                        reminder.isEnabled = true;
+                    }
+                    
+                    // ✅ Update existing reminder details
                     reminder.lastServiceDate = new Date(date);
                     reminder.lastServiceOdometer = odometer;
-                    reminder.odometerInterval = reminderToSend.odometerInterval; // added so the existing intervals is also updated
-                    reminder.timeIntervalMonths = reminderToSend.timeIntervalMonths; // added so the existing intervals is also updated
-                    reminderExists = true; // Mark that the reminder exists
+                    reminder.odometerInterval = reminderToSend.odometerInterval;
+                    reminder.timeIntervalMonths = reminderToSend.timeIntervalMonths;
+                    reminderExists = true;
                 }
             });
 
