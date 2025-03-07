@@ -3,6 +3,50 @@ const Vehicle = require('../models/Vehicle');
 const authMiddleware = require('../middleware/authMiddleware'); // Ensure we protect routes
 const router = express.Router();
 
+// ✅ Get upcoming service reminders for a vehicle
+router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
+    try {
+        const vehicle = await Vehicle.findById(req.params.vehicleId);
+
+        if (!vehicle || vehicle.userId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Unauthorized: You can only view reminders for your own vehicles' });
+        }
+
+        const upcomingReminders = [];
+        const currentOdometer = vehicle.odometer;
+        const currentDate = new Date();
+
+        vehicle.serviceReminders.forEach((reminder) => {
+            if (reminder.isEnabled) {
+                const dueOdometer = reminder.lastServiceOdometer + reminder.odometerInterval;
+                const dueDate = new Date(reminder.lastServiceDate);
+                dueDate.setMonth(dueDate.getMonth() + reminder.timeIntervalMonths);
+
+                // Set thresholds for upcoming reminders
+                const kmThreshold = 1000; // Within 1000 km
+                const timeThreshold = 30; // Within 30 days
+
+                const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
+                const kmUntilDue = dueOdometer - currentOdometer;
+
+                if (kmUntilDue <= kmThreshold || daysUntilDue <= timeThreshold) {
+                    upcomingReminders.push({
+                        type: reminder.type,
+                        dueOdometer,
+                        dueDate: dueDate.toISOString(),
+                        kmUntilDue: kmUntilDue > 0 ? kmUntilDue : 0,
+                        daysUntilDue: daysUntilDue > 0 ? daysUntilDue : 0,
+                    });
+                }
+            }
+        });
+
+        res.json(upcomingReminders);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
 // Create a new vehicle
 router.post('/', authMiddleware, async (req, res) => {
     try {

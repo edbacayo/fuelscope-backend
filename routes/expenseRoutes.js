@@ -5,18 +5,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Permanently delete all soft-deleted expenses
-// purge route placed before the /:id route to avoid treating /purge as in :id
-router.delete('/purge', authMiddleware, async (req, res) => {
-    try {
-        await Expense.deleteMany({ isDeleted: true });
-        res.json({ message: 'All soft-deleted expenses permanently removed' });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-
 // Add an expense and handle fuel efficiency & service reminders
 router.post('/', authMiddleware, async (req, res) => {
     try {
