@@ -250,12 +250,16 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         // Mark the expense as soft-deleted
         expense.isDeleted = true;
+        expense.deletedBy = req.user.id; // Optional for tracking who deleted
+        expense.deletedAt = new Date(); // Timestamp for deletion
         await expense.save();
 
-        const vehicle = await Vehicle.findById(expense.vehicleId);
+        // Find the associated vehicle and ensure the user owns it
+        const vehicle = await Vehicle.findOne({ _id: expense.vehicleId, userId: req.user.id });
         if (!vehicle) {
             return res.status(404).json({ error: 'Vehicle not found' });
         }
+
         // ✅ If the deleted expense was a service, update the related reminder
         if (expense.type === 'service' && expense.serviceDetails) {
             const serviceType = expense.serviceDetails.serviceType;
@@ -267,26 +271,28 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                 'serviceDetails.serviceType': serviceType,
                 isDeleted: false, // Exclude deleted services
                 _id: { $ne: expense._id } // Exclude the current one being deleted
-            }).sort({ date: -1 });
+            }).sort({ date: -1, _id: -1 }); // Ensure proper sorting
 
             let reminder = vehicle.serviceReminders.find(r => r.type === serviceType);
             if (reminder) {
-                if (mostRecentService) {
-                    // ✅ Update reminder with the latest service record
+                if (mostRecentService && new Date(mostRecentService.date) > new Date(reminder.lastServiceDate)) {
+                    // ✅ Update reminder only if the new date is more recent
                     reminder.lastServiceDate = new Date(mostRecentService.date);
                     reminder.lastServiceOdometer = mostRecentService.odometer;
-                } else {
+                } else if (!mostRecentService) {
                     // ❌ No previous service record found → Disable the reminder
                     reminder.isEnabled = false;
                 }
                 await vehicle.save();
             }
         }
+
         res.json({ message: 'Expense marked as deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
+
 
 
 // Update an expense (Only if it belongs to the logged-in user)
