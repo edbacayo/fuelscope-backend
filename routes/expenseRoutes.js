@@ -12,6 +12,8 @@ router.post('/', authMiddleware, async (req, res) => {
             vehicleId, type, fuelDetails, serviceDetails, odometer, totalCost, date, notes, reminderToSend
         } = req.body;
 
+        console.log('reminderToSend: ', reminderToSend);
+
         const vehicle = await Vehicle.findById(vehicleId);
 
         if (!vehicle || vehicle.userId.toString() !== req.user.id) {
@@ -142,7 +144,7 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
         // 🔄 Handle service reminders reset and check for due services
-        if (type === 'service') {
+        if (type === 'service' && reminderToSend) {
             let reminderExists = false;
 
             vehicle.serviceReminders.forEach((reminder) => {
@@ -155,8 +157,8 @@ router.post('/', authMiddleware, async (req, res) => {
                     // ✅ Update existing reminder details
                     reminder.lastServiceDate = new Date(date);
                     reminder.lastServiceOdometer = odometer;
-                    reminder.odometerInterval = reminderToSend.odometerInterval;
-                    reminder.timeIntervalMonths = reminderToSend.timeIntervalMonths;
+                    reminder.odometerInterval = reminderToSend?.odometerInterval || reminder.odometerInterval;
+                    reminder.timeIntervalMonths = reminderToSend?.timeIntervalMonths || reminder.timeIntervalMonths;
                     reminderExists = true;
                 }
             });
@@ -165,8 +167,8 @@ router.post('/', authMiddleware, async (req, res) => {
             if (!reminderExists && req.body.reminderToSend && req.body.reminderToSend.isEnabled) {
                 vehicle.serviceReminders.push({
                     type: serviceDetails.serviceType,
-                    odometerInterval: reminderToSend.odometerInterval,
-                    timeIntervalMonths: reminderToSend.timeIntervalMonths,
+                    odometerInterval: reminderToSend.odometerInterval || 0,
+                    timeIntervalMonths: reminderToSend.timeIntervalMonths || 0,
                     lastServiceDate: new Date(date),
                     lastServiceOdometer: odometer,
                     isEnabled: true // ✅ Only add if user enabled it
