@@ -12,15 +12,13 @@ router.post('/', authMiddleware, async (req, res) => {
             vehicleId, type, fuelDetails, serviceDetails, odometer, totalCost, date, notes, reminderToSend
         } = req.body;
 
-        console.log('reminderToSend: ', reminderToSend);
-
         const vehicle = await Vehicle.findById(vehicleId);
 
         if (!vehicle || vehicle.userId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized: You can only add expenses to your own vehicles' });
         }
 
-        // ✅ Check for existing duplicate (both soft-deleted & active entries)
+        // Check for existing duplicate
         const duplicateQuery = {
             vehicleId,
             type,

@@ -16,7 +16,7 @@ router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
         const currentOdometer = vehicle.odometer;
         const currentDate = new Date();
 
-        vehicle.serviceReminders.forEach((reminder) => {
+        vehicle.serviceReminders.forEach((reminder, i) => {
             if (reminder.isEnabled) {
                 const dueOdometer = reminder.lastServiceOdometer + reminder.odometerInterval;
                 const dueDate = new Date(reminder.lastServiceDate);
