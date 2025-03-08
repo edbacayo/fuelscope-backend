@@ -14,6 +14,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'premium'], // Define allowed roles
+        default: 'user' // Regular users are the default
+    },
     createdAt: {
         type: Date,
         default: Date.now
