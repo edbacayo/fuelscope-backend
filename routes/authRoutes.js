@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); 
+const User = require('../models/User');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -10,7 +10,7 @@ const router = express.Router();
 // Register a new user
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role } = req.body; // 🔹 Include role (optional)
+        const { name, email, password } = req.body; // 🔹 Include role (optional)
 
         // Check if user already exists
         let user = await User.findOne({ email });
@@ -22,17 +22,21 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Assign default role if not provided
-        const userRole = role || 'user';
-
-        // Create new user
-        user = new User({ name, email, password: hashedPassword, role: userRole });
+        // Create new user - default all registered users as 'user'
+        user = new User({ name, email, password: hashedPassword, role: 'user' });
         await user.save();
 
         // Generate JWT Token with role
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        res.status(201).json({ token, user: { id: user.id, name, email, role: user.role } });
+        res.status(201).json({ 
+            token, 
+            user: { 
+                id: user.id, 
+                name, 
+                email, 
+                role: user.role } 
+        });
     } catch (err) {
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
@@ -54,9 +58,16 @@ router.post('/login', async (req, res) => {
         }
 
         // Include role in JWT token
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+        res.json({ 
+            token, 
+            user: { 
+                id: user._id, 
+                name: user.name, 
+                email: user.email, 
+                role: user.role } 
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
