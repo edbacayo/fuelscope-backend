@@ -3,10 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/authRoutes');
 const Vehicle = require('./models/Vehicle');
 const Expense = require('./models/Expense');
 
+const authRoutes = require('./routes/authRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const fuelImportRoutes = require('./routes/fuelImportRoutes');
