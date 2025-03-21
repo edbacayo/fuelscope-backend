@@ -11,6 +11,7 @@ const vehicleRoutes = require('./routes/vehicleRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const fuelImportRoutes = require('./routes/fuelImportRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/import', fuelImportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 const PORT = process.env.PORT || 5000;
