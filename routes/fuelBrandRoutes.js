@@ -1,9 +1,9 @@
 const express = require('express');
 const FuelBrand = require('../models/FuelBrand');
 const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleWare = require('../middleware/adminMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
-const router = express.router();
+const router = express.Router();
 
 // Get all fuel brands
 router.get('/', authMiddleware, async (req, res) => {
@@ -16,7 +16,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // Add a new fuel brand (admin only) 
-router.post('/', authMiddleware, adminMiddleWare, async (req, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { name } = req.body;
         if (!name) {
