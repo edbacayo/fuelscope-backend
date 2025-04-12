@@ -13,6 +13,7 @@ const fuelImportRoutes = require('./routes/fuelImportRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const fuelBrandRoutes = require('./routes/fuelBrandRoutes');
+const serviceTypeRoutes = require('./routes/serviceTypeRoutes');
 
 dotenv.config();
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/import', fuelImportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/fuel-brands', fuelBrandRoutes);
+app.use('/api/service-types', serviceTypeRoutes);
 
 
 const PORT = process.env.PORT || 5000;
