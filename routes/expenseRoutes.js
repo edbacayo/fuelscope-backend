@@ -102,7 +102,7 @@ router.post('/', authMiddleware, async (req, res) => {
         let efficiencyAlert = null;
         let serviceAlerts = [];
 
-        // 🚦 Check for efficiency drop if the entry is a fuel entry
+        // Check for efficiency drop if the entry is a fuel entry
         if (type === 'fuel') {
             const lastFuelEntries = await Expense.find({
                 vehicleId: vehicleId,
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 }
             });
 
-            // 🔥 If no matching reminder exists and user wants to enable a reminder
+            // If no matching reminder exists and user wants to enable a reminder
             if (!reminderExists && req.body.reminderToSend && req.body.reminderToSend.isEnabled) {
                 vehicle.serviceReminders.push({
                     type: serviceDetails.serviceType,

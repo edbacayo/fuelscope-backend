@@ -3,7 +3,7 @@ const Vehicle = require('../models/Vehicle');
 const authMiddleware = require('../middleware/authMiddleware'); // Ensure we protect routes
 const router = express.Router();
 
-// ✅ Get upcoming service reminders for a vehicle
+// Get upcoming service reminders for a vehicle
 router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.vehicleId);
