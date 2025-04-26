@@ -28,7 +28,8 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Fuel brand already exists' });
         }
 
-        const newFuelBrand = new FuelBrand({ name });
+        // explicitly set isActive to true to match schema default
+        const newFuelBrand = new FuelBrand({ name, isActive: true });
         await newFuelBrand.save();
         res.status(201).json(newFuelBrand);
     } catch (err) {
@@ -36,14 +37,57 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
-// Delete fuel brand (admin only) 
-router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+// Soft delete fuel brand (admin only) 
+router.patch('/:id/disable', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-        await FuelBrand.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Fuel brand deleted successfully' });
+        const fuelBrand = await FuelBrand.findById(req.params.id);
+        if (!fuelBrand) {
+            return res.status(404).json({ error: 'Fuel brand not found' });
+        }
+
+        // soft delete the fuel brand
+        fuelBrand.isActive = false;
+        await fuelBrand.save();
+
+        res.json(fuelBrand);
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
+
+// enable fuel brand
+router.patch('/:id/enable', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const fuelBrand = await FuelBrand.findById(req.params.id);
+        if (!fuelBrand) {
+            return res.status(404).json({ error: 'Fuel brand not found' });
+        }
+
+        fuelBrand.isActive = true;
+        await fuelBrand.save();
+
+        res.json(fuelBrand);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
+// Update a fuel brand (admin only)
+router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { name, isActive } = req.body;
+        const brand = await FuelBrand.findById(req.params.id);
+        if (!brand) return res.status(404).json({ error: 'Fuel brand not found' });
+
+        brand.name = name ?? brand.name;
+        if (typeof isActive === 'boolean') brand.isActive = isActive;
+
+        await brand.save();
+        res.json(brand);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
 
 module.exports = router;

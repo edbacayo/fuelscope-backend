@@ -45,7 +45,7 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // ✅ Check for soft-deleted duplicate
+        // Check for soft-deleted duplicate
         duplicateQuery.isDeleted = true;
         const softDeletedExpense = await Expense.findOne(duplicateQuery);
 
@@ -59,13 +59,13 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // ✅ Update odometer if needed
+        // Update odometer if needed
         if (odometer > vehicle.odometer) {
             vehicle.odometer = odometer;
             await vehicle.save();
         }
 
-        // ✅ Validate and handle different types
+        // Validate and handle different types
         let computedFuelDetails = null;
 
         if (type === 'fuel') {
@@ -84,7 +84,7 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Service type is required for service entries.' });
         }
 
-        // ✅ Create the new expense entry
+        // Create the new expense entry
         const newExpense = new Expense({
             userId: req.user.id,
             vehicleId,
@@ -141,18 +141,18 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         }
 
-        // 🔄 Handle service reminders reset and check for due services
+        // Handle service reminders reset and check for due services
         if (type === 'service' && reminderToSend) {
             let reminderExists = false;
 
             vehicle.serviceReminders.forEach((reminder) => {
                 if (reminder.type.toLowerCase() === serviceDetails.serviceType.toLowerCase()) {
-                    // ✅ If the reminder is disabled but the user enabled it, activate it
+                    // If the reminder is disabled but the user enabled it, activate it
                     if (!reminder.isEnabled && req.body.reminderToSend?.isEnabled) {
                         reminder.isEnabled = true;
                     }
                     
-                    // ✅ Update existing reminder details
+                    // Update existing reminder details
                     reminder.lastServiceDate = new Date(date);
                     reminder.lastServiceOdometer = odometer;
                     reminder.odometerInterval = reminderToSend?.odometerInterval || reminder.odometerInterval;
@@ -169,7 +169,7 @@ router.post('/', authMiddleware, async (req, res) => {
                     timeIntervalMonths: reminderToSend.timeIntervalMonths || 0,
                     lastServiceDate: new Date(date),
                     lastServiceOdometer: odometer,
-                    isEnabled: true // ✅ Only add if user enabled it
+                    isEnabled: true // Only add if user enabled it
                 });
             }
 
@@ -250,7 +250,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ error: 'Vehicle not found' });
         }
 
-        // ✅ If the deleted expense was a service, update the related reminder
+        // If the deleted expense was a service, update the related reminder
         if (expense.type === 'service' && expense.serviceDetails) {
             const serviceType = expense.serviceDetails.serviceType;
 
@@ -266,11 +266,11 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             let reminder = vehicle.serviceReminders.find(r => r.type === serviceType);
             if (reminder) {
                 if (mostRecentService && new Date(mostRecentService.date) > new Date(reminder.lastServiceDate)) {
-                    // ✅ Update reminder only if the new date is more recent
+                    // Update reminder only if the new date is more recent
                     reminder.lastServiceDate = new Date(mostRecentService.date);
                     reminder.lastServiceOdometer = mostRecentService.odometer;
                 } else if (!mostRecentService) {
-                    // ❌ No previous service record found → Disable the reminder
+                    // No previous service record found → Disable the reminder
                     reminder.isEnabled = false;
                 }
                 await vehicle.save();
@@ -315,7 +315,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
         res.json({ message: 'Expense updated successfully', expense });
     } catch (err) {
-        console.log('Error: ', err.message);
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
