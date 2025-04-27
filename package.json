@@ -1,13 +1,13 @@
 {
-  "name": "car-tracker",
+  "name": "fuelscope-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "FuelScope backend API for fuel & maintenance data",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Edmund Bacayo",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
