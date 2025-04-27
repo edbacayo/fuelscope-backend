@@ -1,5 +1,6 @@
 const express = require('express');
 const Vehicle = require('../models/Vehicle');
+const Expense = require('../models/Expense');
 const authMiddleware = require('../middleware/authMiddleware'); // Ensure we protect routes
 const router = express.Router();
 
@@ -56,6 +57,14 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Name and odometer are required' });
         }
 
+        // Enforce vehicle limits by user role
+        const count = await Vehicle.countDocuments({ userId: req.user.id });
+        const role = req.user.role;
+        const max = role === 'premium' ? 2 : role === 'user' ? 1 : Infinity;
+        if (count >= max) {
+            return res.status(403).json({ error: `Role '${role}' allows a maximum of ${max} vehicles` });
+        }
+
         const newVehicle = new Vehicle({
             userId: req.user.id,
             name,
@@ -69,7 +78,7 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
-// ✅ Get a single vehicle by ID
+// Get a single vehicle by ID
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.id);
@@ -87,7 +96,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
-
 
 // Get all vehicles for the logged-in user
 router.get('/', authMiddleware, async (req, res) => {
@@ -113,6 +121,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized: You can only delete your own vehicles' });
         }
 
+        // Cascade delete all expenses for this vehicle
+        await Expense.deleteMany({ vehicleId: req.params.id });
         await Vehicle.findByIdAndDelete(req.params.id);
         res.json({ message: 'Vehicle deleted successfully' });
     } catch (err) {
@@ -138,6 +148,12 @@ router.put('/:id', authMiddleware, async (req, res) => {
         // Ensure the logged-in user owns the vehicle
         if (vehicle.userId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized: You can only update your own vehicles' });
+        }
+
+        // Prevent odometer rollback
+        const latest = await Expense.findOne({ vehicleId: req.params.id }).sort({ odometer: -1 });
+        if (latest && odometer < latest.odometer) {
+            return res.status(400).json({ error: `Odometer must be >= latest recorded (${latest.odometer})` });
         }
 
         vehicle.name = name;
@@ -280,7 +296,5 @@ router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
-
-
 
 module.exports = router;
