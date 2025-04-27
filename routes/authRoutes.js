@@ -10,7 +10,12 @@ const router = express.Router();
 // Register a new user
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body; // 🔹 Include role (optional)
+        const { name, email, password, website } = req.body; // include honeypot field
+
+        // honeypot CAPTCHA: reject bot submissions
+        if (website && website.trim() !== '') {
+            return res.status(400).json({ message: 'Bot detected' });
+        }
 
         // Check if user already exists
         let user = await User.findOne({ email });
