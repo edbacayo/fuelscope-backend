@@ -10,11 +10,16 @@ const router = express.Router();
 // Register a new user
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, website } = req.body; // include honeypot field
+        const { name, email, password, website, agreedToDisclaimerAt } = req.body; // include honeypot field
 
         // honeypot CAPTCHA: reject bot submissions
         if (website && website.trim() !== '') {
             return res.status(400).json({ message: 'Bot detected' });
+        }
+
+        // Disclaimer agreement required
+        if (!agreedToDisclaimerAt) {
+            return res.status(400).json({ message: 'You must agree to the Disclaimer.' });
         }
 
         // Check if user already exists
@@ -28,7 +33,7 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create new user - default all registered users as 'user'
-        user = new User({ name, email, password: hashedPassword, role: 'user' });
+        user = new User({ name, email, password: hashedPassword, role: 'user', agreedToDisclaimerAt });
         await user.save();
 
         // Generate JWT Token with role
