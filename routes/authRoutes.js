@@ -3,12 +3,20 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 const router = express.Router();
 
+// Rate limiting for registration
+const regLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1, // Limit each IP to 1 registration attempt per window
+  message: 'Too many accounts created from this IP, try again after 15 minutes'
+});
+
 // Register a new user
-router.post('/register', async (req, res) => {
+router.post('/register', regLimiter, async (req, res) => {
     try {
         const { name, email, password, website, agreedToDisclaimerAt } = req.body; // include honeypot field
 
@@ -20,6 +28,12 @@ router.post('/register', async (req, res) => {
         // Disclaimer agreement required
         if (!agreedToDisclaimerAt) {
             return res.status(400).json({ message: 'You must agree to the Disclaimer.' });
+        }
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
         }
 
         // Check if user already exists
