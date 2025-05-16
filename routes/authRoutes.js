@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { changePassword } = require('../controllers/authController');
+const authMiddleware = require('../middleware/authMiddleware');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 
@@ -96,6 +98,9 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// Change password (for logged-in users)
+router.post('/change-password', authMiddleware, changePassword);
 
 // Test route (optional, to check if API is working)
 router.get('/test', (req, res) => {
