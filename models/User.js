@@ -30,6 +30,10 @@ const UserSchema = new mongoose.Schema({
     agreedToDisclaimerAt: {
         type: Date,
         required: true
+    },
+    mustResetPassword: {
+        type: Boolean,
+        default: false
     }
 });
 

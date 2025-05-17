@@ -83,8 +83,8 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Include role in JWT token
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '4h' });
+        // Include role and mustResetPassword in JWT token
+        const token = jwt.sign({ id: user._id, role: user.role, mustResetPassword: user.mustResetPassword }, process.env.JWT_SECRET, { expiresIn: '4h' });
 
         res.json({ 
             token, 
@@ -92,7 +92,9 @@ router.post('/login', async (req, res) => {
                 id: user._id, 
                 name: user.name, 
                 email: user.email, 
-                role: user.role } 
+                role: user.role,
+                mustResetPassword: user.mustResetPassword
+            } 
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

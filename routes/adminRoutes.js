@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
+const authController = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -46,6 +47,9 @@ router.put('/users/:id/disable', authMiddleware, adminMiddleware, async (req, re
         res.status(500).json({ error: 'Server error', details: err.message });
     }
 });
+
+// 🔹 Reset User Password (Admin)
+router.post('/users/:userId/reset-password', authMiddleware, adminMiddleware, authController.resetUserPassword);
 
 // 🔹 Delete a User
 router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
