@@ -21,14 +21,25 @@ const app = express();
 // Allow requests from frontend
 const allowedOrigins = [
     process.env.FRONTEND_DEV_URL,
-    process.env.FRONTEND_PROD_URL
-];
+    process.env.FRONTEND_PROD_URL,
+    'https://fuelscope-frontend-af3be29e70a1.herokuapp.com',
+    'http://localhost:3000'
+].filter(Boolean); // Filter out undefined/null values
+
+console.log('Allowed CORS origins:', allowedOrigins);
+
 app.use(cors({
-    origin : (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true)
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl requests)
+        if (!origin) {
+            return callback(null, true);
+        }
+        
+        if (allowedOrigins.length === 0 || allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin))) {
+            callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'))
+            console.log(`Origin ${origin} not allowed by CORS`);
+            callback(new Error('Not allowed by CORS'));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
