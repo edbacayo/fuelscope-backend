@@ -63,4 +63,39 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
+// Update a service type (admin only)
+router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { type, odometerInterval, timeIntervalMonths } = req.body;
+        const force = req.query.force === 'true';
+        const serviceType = await ServiceType.findById(req.params.id);
+        if (!serviceType) {
+            return res.status(404).json({ error: 'Service type not found' });
+        }
+
+        // If changing the name
+        if (type && type !== serviceType.type) {
+            const existing = await ServiceType.findOne({ type });
+            if (existing) {
+                return res.status(400).json({ error: 'A service type with this name already exists.' });
+            }
+            const count = await Expense.countDocuments({ type: 'service', 'serviceDetails.serviceType': serviceType.type });
+            if (count > 0 && !force) {
+                return res.status(409).json({
+                    message: `There are ${count} expenses using '${serviceType.type}'. Changing the name will affect those records.`,
+                    needConfirmation: true,
+                    count
+                });
+            }
+            serviceType.type = type;
+        }
+        if (odometerInterval !== undefined) serviceType.odometerInterval = odometerInterval;
+        if (timeIntervalMonths !== undefined) serviceType.timeIntervalMonths = timeIntervalMonths;
+        await serviceType.save();
+        res.json(serviceType);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error', details: err.message });
+    }
+});
+
 module.exports = router;
