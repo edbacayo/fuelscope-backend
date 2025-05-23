@@ -18,9 +18,19 @@ const serviceTypeRoutes = require('./routes/serviceTypeRoutes');
 dotenv.config();
 const app = express();
 
-// Allow requests from frontend (localhost:3001)
+// Allow requests from frontend
+const allowedOrigins = [
+    process.env.FRONTEND_DEV_URL,
+    process.env.FRONTEND_PROD_URL
+];
 app.use(cors({
-    origin: 'http://localhost:3001', // Allow frontend origin
+    origin : (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true)
+        } else {
+            callback(new Error('Not allowed by CORS'))
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
 }));
@@ -28,7 +38,6 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
-app.use(cors());
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)
