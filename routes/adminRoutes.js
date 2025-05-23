@@ -51,13 +51,27 @@ router.put('/users/:id/disable', authMiddleware, adminMiddleware, async (req, re
 // 🔹 Reset User Password (Admin)
 router.post('/users/:userId/reset-password', authMiddleware, adminMiddleware, authController.resetUserPassword);
 
-// 🔹 Delete a User
+// 🔹 Delete a User and all related data
 router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const userId = req.params.id;
+        const user = await User.findById(userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        res.json({ message: 'User deleted successfully' });
+        // Find all vehicles belonging to the user
+        const Vehicle = require('../models/Vehicle');
+        const Expense = require('../models/Expense');
+        const vehicles = await Vehicle.find({ userId });
+        const vehicleIds = vehicles.map(v => v._id);
+
+        // Delete all expenses related to these vehicles or directly to the user
+        await Expense.deleteMany({ $or: [ { userId }, { vehicleId: { $in: vehicleIds } } ] });
+        // Delete all vehicles
+        await Vehicle.deleteMany({ userId });
+        // Finally, delete the user
+        await User.findByIdAndDelete(userId);
+
+        res.json({ message: 'User and all related vehicles and expenses deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });
     }

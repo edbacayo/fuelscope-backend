@@ -78,10 +78,41 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
+
+# macOS metadata
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+.editorconfig
+
+# npm/yarn config
+.npmrc
+.yarnrc
+
+# uploads directory (user uploaded files)
+uploads/
+
+# Temporary/trash files
+.trash/
+.tmp/
+tmp/
+
+# Coverage output
+.coverage
+
 
 # Next.js build output
 .next
