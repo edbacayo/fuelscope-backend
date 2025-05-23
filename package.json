@@ -12,7 +12,7 @@
     "author": "Edmund Bacayo",
     "license": "ISC",
     "engines": {
-      "node": "23.7.0"
+      "node": "23.x"
     },
     "dependencies": {
       "bcryptjs": "^3.0.2",
