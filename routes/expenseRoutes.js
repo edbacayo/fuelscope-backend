@@ -1,6 +1,6 @@
 const express = require('express');
 const Expense = require('../models/Expense');
-const Vehicle = require('../models/Vehicle'); // ✅ Ensure expense is tied to user's vehicle
+const Vehicle = require('../models/Vehicle'); // Ensure expense is tied to user's vehicle
 const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -60,9 +60,11 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
         // Update odometer if needed
-        if (odometer > vehicle.odometer) {
-            vehicle.odometer = odometer;
-            await vehicle.save();
+        if (type === 'fuel' || type === 'service') {
+            if (odometer > vehicle.odometer) {
+                vehicle.odometer = odometer;
+                await vehicle.save();
+            }
         }
 
         // Validate and handle different types
@@ -177,7 +179,7 @@ router.post('/', authMiddleware, async (req, res) => {
         }
 
 
-        // 🔔 Check if any reminders are due
+        // Check if any reminders are due
         vehicle.serviceReminders.forEach((reminder) => {
             if (reminder.isEnabled) {
                 const dueOdometer = reminder.lastServiceOdometer + reminder.odometerInterval;
@@ -290,8 +292,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const { type, odometer, pricePerLiter, totalCost, fuelBrand, date } = req.body;
 
-        if (!type || odometer == null || totalCost == null || !date) {
-            return res.status(400).json({ error: 'Type, odometer, totalCost, and date are required' });
+        if (!type || totalCost == null || !date || ((type === 'fuel' || type === 'service') && odometer == null)) {
+            return res.status(400).json({ error: 'Type, totalCost, date, and odometer (for fuel/service) are required' });
         }
 
         const expense = await Expense.findById(req.params.id);

@@ -41,7 +41,15 @@ const ExpenseSchema = new mongoose.Schema({
     },
     odometer: {
         type: Number,
-        required: true
+        validate: {
+            validator: function(value) {
+                if (['fuel', 'service'].includes(this.type)) {
+                    return value !== null && value !== undefined;
+                }
+                return true;
+            },
+            message: 'Odometer is required for fuel and service expenses.'
+        }
     },
     totalCost: {
         type: Number,
