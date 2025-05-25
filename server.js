@@ -55,6 +55,11 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
+// Health check endpoint for Heroku dyno wake-up
+app.get('/api/ping', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
