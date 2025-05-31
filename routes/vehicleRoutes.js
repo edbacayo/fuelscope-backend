@@ -152,8 +152,8 @@ router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) =>
                 dueDate.setMonth(dueDate.getMonth() + reminder.timeIntervalMonths);
 
                 // Set thresholds for upcoming reminders
-                const kmThreshold = 500; // Within 500 km
-                const timeThreshold = 30; // Within 30 days
+                const kmThreshold = 600;
+                const timeThreshold = 31; 
 
                 const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
                 const kmUntilDue = dueOdometer - currentOdometer;
