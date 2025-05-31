@@ -51,8 +51,11 @@ app.use(cors({
 app.use(express.json());
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
+const isProduction = process.env.NODE_ENV === 'production';
+const mongoUri = isProduction ? process.env.MONGO_URI : process.env.MONGO_URI_LOCAL;
+
+mongoose.connect(mongoUri)
+  .then(() => console.log('MongoDB Connected', isProduction ? 'Production' : 'Local'))
   .catch(err => console.log(err));
 
 // Health check endpoint for Heroku dyno wake-up
