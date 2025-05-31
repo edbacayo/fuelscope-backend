@@ -53,7 +53,7 @@ router.post('/register', regLimiter, async (req, res) => {
         await user.save();
 
         // Generate JWT Token with role
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
         res.status(201).json({ 
             token, 
