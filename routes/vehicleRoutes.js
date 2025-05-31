@@ -133,7 +133,7 @@ router.post('/:vehicleId/expenses/import', authMiddleware, multerUpload.single('
 });
 
 // Get upcoming service reminders for a vehicle
-router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
+router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.vehicleId);
 
@@ -152,11 +152,13 @@ router.get('/:vehicleId/reminders', authMiddleware, async (req, res) => {
                 dueDate.setMonth(dueDate.getMonth() + reminder.timeIntervalMonths);
 
                 // Set thresholds for upcoming reminders
-                const kmThreshold = 1000; // Within 1000 km
+                const kmThreshold = 500; // Within 500 km
                 const timeThreshold = 30; // Within 30 days
 
                 const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
                 const kmUntilDue = dueOdometer - currentOdometer;
+
+                console.log("UPCOMING: ", reminder.type, reminder.lastServiceOdometer, kmUntilDue, daysUntilDue);
 
                 if (kmUntilDue <= kmThreshold || daysUntilDue <= timeThreshold) {
                     upcomingReminders.push({
