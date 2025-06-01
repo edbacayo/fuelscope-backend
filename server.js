@@ -23,7 +23,8 @@ const allowedOrigins = [
     process.env.FRONTEND_DEV_URL,
     process.env.FRONTEND_PROD_URL,
     'https://fuelscope-frontend-af3be29e70a1.herokuapp.com',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'https://fuelscope.edmundbacayo.com'
 ].filter(Boolean); // Filter out undefined/null values
 
 console.log('Allowed CORS origins:', allowedOrigins);
