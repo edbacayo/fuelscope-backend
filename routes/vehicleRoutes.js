@@ -158,8 +158,6 @@ router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) =>
                 const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
                 const kmUntilDue = dueOdometer - currentOdometer;
 
-                console.log("UPCOMING: ", reminder.type, reminder.lastServiceOdometer, kmUntilDue, daysUntilDue);
-
                 if (kmUntilDue <= kmThreshold || daysUntilDue <= timeThreshold) {
                     upcomingReminders.push({
                         type: reminder.type,
