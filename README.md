@@ -14,16 +14,16 @@ A minimal guide for setting up the API on your local machine. Assumes intermedia
 
 ---
 
-## 2 · Clone the repository
+## 2 · Clone the repository
 
 ```bash
 # backend only – frontend lives in a separate repo
-$ git clone https://github.com/<your‑org>/fuelscope-backend.git
+$ git clone https://github.com/edbacayo/fuelscope-backend.git
 ```
 
 ---
 
-## 3 · Install dependencies
+## 3 · Install dependencies
 
 ```bash
 $ cd fuelscope-backend
