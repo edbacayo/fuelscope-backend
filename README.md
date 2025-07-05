@@ -8,9 +8,9 @@ A minimal guide for setting up the API on your local machine. Assumes intermedia
 
 | Tool                         | Recommended version | Notes                                            |
 | ---------------------------- | ------------------- | ------------------------------------------------ |
-| **Node.js**                  | ≥ v23.x             | Matches the `"engines"` field in *package.json*  |
+| **Node.js**                  | ≥ v18.x             |                                                  |
 | **npm**                      | bundled with Node   | v10 + preferred                                  |
-| **MongoDB Community Server** | v6.x (or Atlas)     | Alternatively: `docker run -p 27017:27017 mongo` |
+| **MongoDB Community Server** | v6.x (or Atlas)     |
 
 ---
 
