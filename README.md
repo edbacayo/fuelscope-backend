@@ -1,71 +1,57 @@
-# FuelScope
-**Zoom in on fuel & maintenance data.**
+# FuelScope Backend – Quick Start
 
-FuelScope is a vehicle management app designed to help users track fuel expenses, monitor maintenance history, and visualize driving efficiency across multiple vehicles. Whether you’re managing one car or a small fleet, FuelScope helps keep your vehicle records in one place—accessible and actionable.
-
----
-
-## 🚀 Features
-
-- Fuel cost and consumption tracking with charts
-- Service reminders and maintenance logs
-- Manage multiple vehicles
-- Secure login with role-based access (User/Admin)
-- Admin Panel to manage users, service types, and fuel brands
-- CSV import for fuel entries
-- Filtering and date-based insights
+A minimal guide for setting up the API on your local machine. Assumes intermediate familiarity with Git, Terminal, and basic Node/Mongo tooling.
 
 ---
 
-## 🔑 Getting Started
+## 1 · Install prerequisites
 
-### Requirements
-- Node.js (v18 or above)
-- npm
+| Tool                         | Recommended version | Notes                                            |
+| ---------------------------- | ------------------- | ------------------------------------------------ |
+| **Node.js**                  | ≥ v23.x             | Matches the `"engines"` field in *package.json*  |
+| **npm**                      | bundled with Node   | v10 + preferred                                  |
+| **MongoDB Community Server** | v6.x (or Atlas)     | Alternatively: `docker run -p 27017:27017 mongo` |
 
-### Installation
+---
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/edmundbacayo/fuelscope.git
-   cd fuelscope/backend
+## 2 · Clone the repository
 
-2. Install dependencies:
-   ```bash
-   npm install
-    
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-    
-4. Start the development server:
-   ```bash
-   npm start
+```bash
+# backend only – frontend lives in a separate repo
+$ git clone https://github.com/<your‑org>/fuelscope-backend.git
+```
 
-5. Open http://localhost:5000 in your browser.
+---
 
-## Navigation Overview
-| Page               | Description                                   |
-| ------------------ | --------------------------------------------- |
-| `/login`           | User login screen                             |
-| `/dashboard`       | Redirects to the first vehicle's dashboard    |
-| `/dashboard/:id`   | View fuel and service stats for a vehicle     |
-| `/manage-vehicles` | Add/edit/remove your vehicles                 |
-| `/admin`           | Admin-only panel for managing global settings |
+## 3 · Install dependencies
 
-## Admin Capabilities
-- Add/remove users
-- Assign roles
-- Set fuel brand presets
-- Define service intervals
+```bash
+$ cd fuelscope-backend
+$ npm install
+```
 
-## Tech Stack
-- React 19
-- Bootstrap 5
-- Recharts for charting
-- Axios for API communication
-- React Router v7
+---
 
-## Support
-If you encounter bugs or want to suggest a feature, feel free to open an issue or contact the developer.
+## 4 · Create a local database
+
+Make sure the MongoDB daemon is running locally (e.g. `mongod` or your Docker container). The default connection string used below is:
+
+```
+mongodb://localhost:27017/fuelscope
+```
+
+---
+
+## 5 · Add a `.env` file
+
+Create *backend/.env* with the following starter values:
+
+```dotenv
+NODE_ENV=development          # or "production"
+PORT=3000                     # backend port
+JWT_SECRET=dev-change-me      # any long random string
+MONGO_URI=mongodb://localhost:27017/fuelscope
+```
+
+---
 
