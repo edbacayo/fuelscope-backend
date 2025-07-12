@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-        const users = await User.find().select('-password'); // Exclude passwords
+        const users = await User.find().select('-password'); 
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });

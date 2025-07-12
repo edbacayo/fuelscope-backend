@@ -25,7 +25,7 @@ router.post('/', authMiddleware, async (req, res) => {
             odometer,
             totalCost,
             date,
-            isDeleted: false // Check only active records
+            isDeleted: false 
         };
 
         if (type === 'fuel') {
@@ -45,12 +45,10 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // Check for soft-deleted duplicate
         duplicateQuery.isDeleted = true;
         const softDeletedExpense = await Expense.findOne(duplicateQuery);
 
         if (softDeletedExpense) {
-            // Restore the soft-deleted expense
             softDeletedExpense.isDeleted = false;
             await softDeletedExpense.save();
             return res.status(200).json({
@@ -67,7 +65,6 @@ router.post('/', authMiddleware, async (req, res) => {
             }
         }
 
-        // Validate and handle different types
         let computedFuelDetails = null;
 
         if (type === 'fuel') {
@@ -154,7 +151,6 @@ router.post('/', authMiddleware, async (req, res) => {
                         reminder.isEnabled = true;
                     }
                     
-                    // Update existing reminder details
                     reminder.lastServiceDate = new Date(date);
                     reminder.lastServiceOdometer = odometer;
                     reminder.odometerInterval = reminderToSend?.odometerInterval || reminder.odometerInterval;
@@ -163,7 +159,6 @@ router.post('/', authMiddleware, async (req, res) => {
                 }
             });
 
-            // If no matching reminder exists and user wants to enable a reminder
             if (!reminderExists && req.body.reminderToSend && req.body.reminderToSend.isEnabled) {
                 vehicle.serviceReminders.push({
                     type: serviceDetails.serviceType,
@@ -171,13 +166,12 @@ router.post('/', authMiddleware, async (req, res) => {
                     timeIntervalMonths: reminderToSend.timeIntervalMonths || 0,
                     lastServiceDate: new Date(date),
                     lastServiceOdometer: odometer,
-                    isEnabled: true // Only add if user enabled it
+                    isEnabled: true 
                 });
             }
 
             await vehicle.save();
         }
-
 
         // Check if any reminders are due
         vehicle.serviceReminders.forEach((reminder) => {
@@ -209,17 +203,14 @@ router.post('/', authMiddleware, async (req, res) => {
 
 
 
-// Get all active expenses for a vehicle (with explicit authorization check)
 router.get('/:vehicleId', authMiddleware, async (req, res) => {
     try {
-        // Step 1: Verify if the vehicle exists and belongs to the logged-in user
         const vehicle = await Vehicle.findById(req.params.vehicleId);
 
         if (!vehicle || vehicle.userId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized: You can only view expenses for your own vehicles' });
         }
 
-        // Step 2: Fetch active (non-deleted) expenses for the authorized vehicle
         const expenses = await Expense.find({
             vehicleId: req.params.vehicleId,
             isDeleted: false
@@ -240,10 +231,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ error: 'Expense not found or unauthorized' });
         }
 
-        // Mark the expense as soft-deleted
         expense.isDeleted = true;
-        expense.deletedBy = req.user.id; // Optional for tracking who deleted
-        expense.deletedAt = new Date(); // Timestamp for deletion
+        expense.deletedBy = req.user.id; 
+        expense.deletedAt = new Date(); 
         await expense.save();
 
         // Find the associated vehicle and ensure the user owns it
@@ -256,14 +246,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         if (expense.type === 'service' && expense.serviceDetails) {
             const serviceType = expense.serviceDetails.serviceType;
 
-            // Find the most recent service entry (excluding the deleted one)
             const mostRecentService = await Expense.findOne({
                 vehicleId: expense.vehicleId,
                 type: 'service',
                 'serviceDetails.serviceType': serviceType,
-                isDeleted: false, // Exclude deleted services
-                _id: { $ne: expense._id } // Exclude the current one being deleted
-            }).sort({ date: -1, _id: -1 }); // Ensure proper sorting
+                isDeleted: false, 
+                _id: { $ne: expense._id } 
+            }).sort({ date: -1, _id: -1 }); 
 
             let reminder = vehicle.serviceReminders.find(r => r.type === serviceType);
             if (reminder) {
@@ -272,7 +261,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
                     reminder.lastServiceDate = new Date(mostRecentService.date);
                     reminder.lastServiceOdometer = mostRecentService.odometer;
                 } else if (!mostRecentService) {
-                    // No previous service record found → Disable the reminder
                     reminder.isEnabled = false;
                 }
                 await vehicle.save();
@@ -321,16 +309,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// Function to check if a service reminder is due
 const checkServiceReminderDue = (reminder, currentOdometer) => {
     const { odometerInterval, timeIntervalMonths, lastServiceOdometer, lastServiceDate, isEnabled } = reminder;
 
-    if (!isEnabled) return false; // Skip disabled reminders
+    if (!isEnabled) return false; 
 
-    // Check odometer interval
     const dueByOdometer = lastServiceOdometer + odometerInterval;
 
-    // Check time interval
     const dueByDate = new Date(lastServiceDate);
     dueByDate.setMonth(dueByDate.getMonth() + timeIntervalMonths);
 
