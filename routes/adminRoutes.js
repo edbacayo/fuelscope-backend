@@ -8,7 +8,6 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
-// 🔹 Get all users (Admin Only)
 router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const users = await User.find().select('-password'); // Exclude passwords
@@ -18,7 +17,6 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
-// 🔹 Update User Role
 router.put('/users/:id/role', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { role } = req.body;
@@ -35,7 +33,6 @@ router.put('/users/:id/role', authMiddleware, adminMiddleware, async (req, res) 
     }
 });
 
-// 🔹 Disable a User Account
 router.put('/users/:id/disable', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -50,10 +47,8 @@ router.put('/users/:id/disable', authMiddleware, adminMiddleware, async (req, re
     }
 });
 
-// 🔹 Reset User Password (Admin)
 router.post('/users/:userId/reset-password', authMiddleware, adminMiddleware, authController.resetUserPassword);
 
-// 🔹 Delete a User and all related data
 router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const userId = req.params.id;
@@ -79,7 +74,6 @@ router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) =>
     }
 });
 
-// 🔹 Get all vehicles with user info and expense counts
 router.get('/vehicles', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         // Get all vehicles
@@ -120,7 +114,6 @@ router.get('/vehicles', authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
-// 🔹 Delete a vehicle and all its expenses (admin only)
 router.delete('/vehicles/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(req.params.id);

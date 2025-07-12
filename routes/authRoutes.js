@@ -10,19 +10,17 @@ const rateLimit = require('express-rate-limit');
 dotenv.config();
 const router = express.Router();
 
-// Rate limiting for registration
 const regLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1, // Limit each IP to 1 registration attempt per window
+  windowMs: 15 * 60 * 1000, 
+  max: 1, 
   message: 'Too many accounts created from this IP, try again after 15 minutes'
 });
 
 // Register a new user
 router.post('/register', regLimiter, async (req, res) => {
     try {
-        const { name, email, password, website, agreedToDisclaimerAt } = req.body; // include honeypot field
+        const { name, email, password, website, agreedToDisclaimerAt } = req.body; 
 
-        // honeypot CAPTCHA: reject bot submissions
         if (website && website.trim() !== '') {
             return res.status(400).json({ message: 'Bot detected' });
         }
@@ -32,27 +30,22 @@ router.post('/register', regLimiter, async (req, res) => {
             return res.status(400).json({ message: 'You must agree to the Disclaimer.' });
         }
 
-        // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
-        // Check if user already exists
         let user = await User.findOne({ email });
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user - default all registered users as 'user'
         user = new User({ name, email, password: hashedPassword, role: 'user', agreedToDisclaimerAt });
         await user.save();
 
-        // Generate JWT Token with role
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
         res.status(201).json({ 
@@ -83,8 +76,7 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Include role and mustResetPassword in JWT token
-        const token = jwt.sign({ id: user._id, role: user.role, mustResetPassword: user.mustResetPassword }, process.env.JWT_SECRET, { expiresIn: '4h' });
+        const token = jwt.sign({ id: user._id, role: user.role, mustResetPassword: user.mustResetPassword }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
         res.json({ 
             token, 
@@ -101,10 +93,9 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Change password (for logged-in users)
 router.post('/change-password', authMiddleware, changePassword);
 
-// Test route (optional, to check if API is working)
+// Test route 
 router.get('/test', (req, res) => {
     res.json({ message: 'Auth route is working' });
 });
