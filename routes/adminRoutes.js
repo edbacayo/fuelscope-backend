@@ -65,7 +65,7 @@ router.delete('/users/:id', authMiddleware, adminMiddleware, async (req, res) =>
         await Expense.deleteMany({ $or: [ { userId }, { vehicleId: { $in: vehicleIds } } ] });
         // Delete all vehicles
         await Vehicle.deleteMany({ userId });
-        // Finally, delete the user
+        // Delete the user
         await User.findByIdAndDelete(userId);
 
         res.json({ message: 'User and all related vehicles and expenses deleted successfully' });
