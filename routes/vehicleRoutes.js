@@ -10,7 +10,6 @@ const stream = require('stream');
 const router = express.Router();
 
 // --- CSV EXPORT ENDPOINT ---
-// GET /api/vehicles/:vehicleId/expenses/export
 router.get('/:vehicleId/expenses/export', authMiddleware, async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.vehicleId);
@@ -28,7 +27,6 @@ router.get('/:vehicleId/expenses/export', authMiddleware, async (req, res) => {
 });
 
 // --- CSV IMPORT ENDPOINT ---
-// POST /api/vehicles/:vehicleId/expenses/import
 router.post('/:vehicleId/expenses/import', authMiddleware, multerUpload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
@@ -80,7 +78,6 @@ router.post('/:vehicleId/expenses/import', authMiddleware, multerUpload.single('
     });
     // Check for duplicates and insert
     for (const [i, row] of rows.entries()) {
-      // Only skip if there are no required field errors for this row
       const rowHasError = errors.some(e => e.row === i + 1);
       if (rowHasError) { skippedCount++; continue; }
       const duplicate = await Expense.findOne({
@@ -92,7 +89,6 @@ router.post('/:vehicleId/expenses/import', authMiddleware, multerUpload.single('
         isDeleted: false
       });
       if (duplicate) { skippedCount++; continue; }
-      // Prepare expense doc
       const expenseDoc = {
         userId: req.user.id,
         vehicleId: req.params.vehicleId,
@@ -152,8 +148,8 @@ router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) =>
                 dueDate.setMonth(dueDate.getMonth() + reminder.timeIntervalMonths);
 
                 // Set thresholds for upcoming reminders
-                const kmThreshold = 600;
-                const timeThreshold = 31; 
+                const kmThreshold = 500;
+                const timeThreshold = 30; 
 
                 const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
                 const kmUntilDue = dueOdometer - currentOdometer;
