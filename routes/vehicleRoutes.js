@@ -154,7 +154,7 @@ router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) =>
                 const daysUntilDue = Math.floor((dueDate - currentDate) / (1000 * 60 * 60 * 24));
                 const kmUntilDue = dueOdometer - currentOdometer;
 
-                if (kmUntilDue <= kmThreshold || daysUntilDue <= timeThreshold) {
+                if ((kmUntilDue <= kmThreshold && kmUntilDue >= 0) || (daysUntilDue <= timeThreshold && daysUntilDue >= 0)) {
                     upcomingReminders.push({
                         type: reminder.type,
                         dueOdometer,
@@ -165,7 +165,6 @@ router.get('/:vehicleId/reminders/upcoming', authMiddleware, async (req, res) =>
                 }
             }
         });
-
         res.json(upcomingReminders);
     } catch (err) {
         res.status(500).json({ error: 'Server error', details: err.message });

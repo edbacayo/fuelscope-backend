@@ -210,7 +210,6 @@ router.get('/:vehicleId', authMiddleware, async (req, res) => {
         if (!vehicle || vehicle.userId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized: You can only view expenses for your own vehicles' });
         }
-
         const expenses = await Expense.find({
             vehicleId: req.params.vehicleId,
             isDeleted: false
